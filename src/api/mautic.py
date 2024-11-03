@@ -1,6 +1,5 @@
 import requests
 import logging
-from datetime import datetime
 
 class MauticAPI:
     def __init__(self):
@@ -21,8 +20,8 @@ class MauticAPI:
         if response.status_code == 200:
             self.access_token = response.json()['access_token']
             logging.info("Successfully authenticated with Mautic")
-            return True
-        return False
+        else:
+            raise Exception(f"Authentication failed: {response.text}")
 
     def get_contacts_to_analyze(self):
         headers = {
@@ -30,39 +29,30 @@ class MauticAPI:
             'Content-Type': 'application/json'
         }
         
-        response = requests.get(f"{self.base_url}/api/contacts", headers=headers)
+        response = requests.get(
+            f"{self.base_url}/api/contacts",
+            headers=headers
+        )
         
         if response.status_code == 200:
             data = response.json()
-            contacts = []
-            for cid, cdata in data.get('contacts', {}).items():
-                website = cdata.get('fields', {}).get('core', {}).get('website')
-                if website:
-                    contacts.append({'id': cid, 'website': website})
-            logging.info(f"Found {len(contacts)} contacts to analyze")
-            return contacts
-        return []
+            contacts = data.get('contacts', [])
+            return [c for c in contacts if c.get('fields', {}).get('core', {}).get('website')]
+        else:
+            raise Exception(f"Failed to get contacts: {response.text}")
 
-    def update_contact(self, contact_id, website_data):
+    def update_contact(self, contact_id, data):
         headers = {
             'Authorization': f'Bearer {self.access_token}',
             'Content-Type': 'application/json'
         }
-        is_wordpress = 'yes' if website_data['is_wordpress'] else 'no'
-        data = {
-            'fields': {
-                'all': {
-                    'is_wordpress': is_wordpress,
-                    'wordpress_version': website_data['wordpress_version'] or 'N/A',
-                    'website_pages': str(website_data['total_pages'])
-                }
-            }
-        }
+        
         response = requests.patch(
             f"{self.base_url}/api/contacts/{contact_id}/edit",
             headers=headers,
-            json=data
+            json={'fields': {'core': data}}
         )
+        
         if response.status_code == 200:
             logging.info(f"Successfully updated contact {contact_id}")
             return True
