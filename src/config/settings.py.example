@@ -1,0 +1,15 @@
+# Mautic API Configuration
+MAUTIC_BASE_URL = "https://your-mautic-instance.com"
+MAUTIC_CLIENT_ID = "your_client_id"
+MAUTIC_CLIENT_SECRET = "your_client_secret"
+
+# Default Contact ID for testing
+DEFAULT_CONTACT_ID = 123
+
+# HTTP Settings
+REQUEST_TIMEOUT = 30
+USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+
+# Logging Configuration
+LOG_FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
+LOG_LEVEL = 'INFO'
