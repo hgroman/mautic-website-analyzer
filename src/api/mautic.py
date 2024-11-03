@@ -30,9 +30,16 @@ class MauticAPI:
             'Authorization': f'Bearer {self.access_token}',
             'Content-Type': 'application/json'
         }
+        
         response = requests.get(f"{self.base_url}/api/contacts", headers=headers)
+        
         if response.status_code == 200:
-            return response.json().get('contacts', [])
+            data = response.json()
+            if isinstance(data.get('contacts'), dict):
+                contacts = list(data['contacts'].values())
+            else:
+                contacts = data.get('contacts', [])
+            return contacts
         return []
 
     def get_contact(self, contact_id):
