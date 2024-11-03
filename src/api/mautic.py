@@ -2,7 +2,7 @@ import requests
 import logging
 import json
 from datetime import datetime
-from config.settings import (
+from ..config.settings import (
     MAUTIC_BASE_URL,
     MAUTIC_CLIENT_ID,
     MAUTIC_CLIENT_SECRET
