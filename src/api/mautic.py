@@ -1,6 +1,5 @@
 import requests
 import logging
-import json
 from datetime import datetime
 
 class MauticAPI:
@@ -35,12 +34,13 @@ class MauticAPI:
         
         if response.status_code == 200:
             data = response.json()
-            contacts = data.get('contacts', {})
-            return [
-                {'id': cid, **cdata} 
-                for cid, cdata in contacts.items() 
-                if cdata.get('fields', {}).get('core', {}).get('website')
-            ]
+            contacts = []
+            for cid, cdata in data.get('contacts', {}).items():
+                website = cdata.get('fields', {}).get('core', {}).get('website')
+                if website:
+                    contacts.append({'id': cid, 'website': website})
+            logging.info(f"Found {len(contacts)} contacts to analyze")
+            return contacts
         return []
 
     def update_contact(self, contact_id, website_data):
@@ -70,22 +70,3 @@ class MauticAPI:
             logging.error(f"Failed to update contact. Status: {response.status_code}")
             logging.error(f"Response: {response.text}")
             return False
-
-    def mark_analysis_failed(self, contact_id):
-        headers = {
-            'Authorization': f'Bearer {self.access_token}',
-            'Content-Type': 'application/json'
-        }
-        data = {
-            'fields': {
-                'all': {
-                    'website_analysis_status': 'failed',
-                    'website_analysis_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                }
-            }
-        }
-        requests.patch(
-            f"{self.base_url}/api/contacts/{contact_id}/edit",
-            headers=headers,
-            json=data
-        )
