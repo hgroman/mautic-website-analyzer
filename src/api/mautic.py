@@ -37,7 +37,7 @@ class MauticAPI:
             'Content-Type': 'application/json'
         }
         
-        # Get all contacts with a non-empty website field
+        # Get contacts with non-empty website field
         search = '!website:""'
         
         response = requests.get(
@@ -47,7 +47,9 @@ class MauticAPI:
         )
 
         if response.status_code == 200:
-            return response.json().get('contacts', [])
+            contacts = response.json().get('contacts', [])
+            # Filter to only include contacts with actual website values
+            return [c for c in contacts if c.get('fields', {}).get('core', {}).get('website')]
         return []
 
     def get_contact(self, contact_id):
@@ -74,11 +76,13 @@ class MauticAPI:
         is_wordpress = 'yes' if website_data['is_wordpress'] else 'no'
 
         data = {
-            'is_wordpress': is_wordpress,
-            'wordpress_version': website_data['wordpress_version'] or 'N/A',
-            'website_pages': str(website_data['total_pages']),
-            'website_analysis_status': status,
-            'website_analysis_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            'fields': {
+                'all': {
+                    'is_wordpress': is_wordpress,
+                    'wordpress_version': website_data['wordpress_version'] or 'N/A',
+                    'website_pages': str(website_data['total_pages'])
+                }
+            }
         }
 
         logging.info(f"Updating contact {contact_id} with data: {json.dumps(data, indent=2)}")
@@ -105,8 +109,12 @@ class MauticAPI:
         }
 
         data = {
-            'website_analysis_status': 'failed',
-            'website_analysis_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            'fields': {
+                'all': {
+                    'website_analysis_status': 'failed',
+                    'website_analysis_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                }
+            }
         }
 
         requests.patch(
