@@ -35,22 +35,13 @@ class MauticAPI:
         
         if response.status_code == 200:
             data = response.json()
-            if isinstance(data.get('contacts'), dict):
-                contacts = list(data['contacts'].values())
-            else:
-                contacts = data.get('contacts', [])
-            return contacts
+            contacts = data.get('contacts', {})
+            return [
+                {'id': cid, **cdata} 
+                for cid, cdata in contacts.items() 
+                if cdata.get('fields', {}).get('core', {}).get('website')
+            ]
         return []
-
-    def get_contact(self, contact_id):
-        headers = {
-            'Authorization': f'Bearer {self.access_token}',
-            'Content-Type': 'application/json'
-        }
-        response = requests.get(f"{self.base_url}/api/contacts/{contact_id}", headers=headers)
-        if response.status_code == 200:
-            return response.json()
-        return None
 
     def update_contact(self, contact_id, website_data):
         headers = {
