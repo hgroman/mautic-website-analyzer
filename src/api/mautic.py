@@ -2,17 +2,12 @@ import requests
 import logging
 import json
 from datetime import datetime
-from ..config.settings import (
-    MAUTIC_BASE_URL,
-    MAUTIC_CLIENT_ID,
-    MAUTIC_CLIENT_SECRET
-)
 
 class MauticAPI:
     def __init__(self):
-        self.base_url = MAUTIC_BASE_URL
-        self.client_id = MAUTIC_CLIENT_ID
-        self.client_secret = MAUTIC_CLIENT_SECRET
+        self.base_url = "https://mautic.lastapple.com"
+        self.client_id = "1_5sdfheau12g4so4sssckgg4woo4scgc80w40kw8c0w88kk4sw8"
+        self.client_secret = "13bze0pdq9usws4kso0s8s0wsg8so04g40ossso408s0oos40c"
         self.access_token = None
         self.authenticate()
 
@@ -31,25 +26,13 @@ class MauticAPI:
         return False
 
     def get_contacts_to_analyze(self):
-        """Get all contacts that have a website"""
         headers = {
             'Authorization': f'Bearer {self.access_token}',
             'Content-Type': 'application/json'
         }
-        
-        # Get contacts with non-empty website field
-        search = '!website:""'
-        
-        response = requests.get(
-            f"{self.base_url}/api/contacts",
-            headers=headers,
-            params={'search': search, 'limit': 100}
-        )
-
+        response = requests.get(f"{self.base_url}/api/contacts", headers=headers)
         if response.status_code == 200:
-            contacts = response.json().get('contacts', [])
-            # Filter to only include contacts with actual website values
-            return [c for c in contacts if c.get('fields', {}).get('core', {}).get('website')]
+            return response.json().get('contacts', [])
         return []
 
     def get_contact(self, contact_id):
@@ -57,24 +40,17 @@ class MauticAPI:
             'Authorization': f'Bearer {self.access_token}',
             'Content-Type': 'application/json'
         }
-
-        response = requests.get(
-            f"{self.base_url}/api/contacts/{contact_id}",
-            headers=headers
-        )
-
+        response = requests.get(f"{self.base_url}/api/contacts/{contact_id}", headers=headers)
         if response.status_code == 200:
             return response.json()
         return None
 
-    def update_contact(self, contact_id, website_data, status='complete'):
+    def update_contact(self, contact_id, website_data):
         headers = {
             'Authorization': f'Bearer {self.access_token}',
             'Content-Type': 'application/json'
         }
-
         is_wordpress = 'yes' if website_data['is_wordpress'] else 'no'
-
         data = {
             'fields': {
                 'all': {
@@ -84,15 +60,11 @@ class MauticAPI:
                 }
             }
         }
-
-        logging.info(f"Updating contact {contact_id} with data: {json.dumps(data, indent=2)}")
-
         response = requests.patch(
             f"{self.base_url}/api/contacts/{contact_id}/edit",
             headers=headers,
             json=data
         )
-
         if response.status_code == 200:
             logging.info(f"Successfully updated contact {contact_id}")
             return True
@@ -102,12 +74,10 @@ class MauticAPI:
             return False
 
     def mark_analysis_failed(self, contact_id):
-        """Mark a contact's analysis as failed"""
         headers = {
             'Authorization': f'Bearer {self.access_token}',
             'Content-Type': 'application/json'
         }
-
         data = {
             'fields': {
                 'all': {
@@ -116,7 +86,6 @@ class MauticAPI:
                 }
             }
         }
-
         requests.patch(
             f"{self.base_url}/api/contacts/{contact_id}/edit",
             headers=headers,
