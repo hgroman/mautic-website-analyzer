@@ -1,36 +1,42 @@
 import logging
 import sys
-from datetime import datetime
-from .api.mautic import MauticAPI
-from .analyzer.website import analyze_website
+from pathlib import Path
+
+# Add the project root directory to Python path
+project_root = str(Path(__file__).parent.parent)
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
+from src.config.settings import LOG_FORMAT, LOG_LEVEL
+from src.api.mautic import MauticAPI
+from src.analyzer.website import analyze_website
 
 def process_contact(mautic, contact):
-    """Process a single contact"""
-    if isinstance(contact, str):
-        return
-        
-    contact_id = contact.get('id')
-    if not contact_id:
-        return
-        
-    website = contact.get('fields', {}).get('core', {}).get('website')
-    if not website:
-        return
-
-    logging.info(f"Analyzing website for contact {contact_id}: {website}")
-    
     try:
+        contact_id = contact['id']
+        website = contact.get('fields', {}).get('core', {}).get('website')
+        
+        if not website:
+            logging.warning(f"Contact {contact_id} has no website")
+            return
+            
+        logging.info(f"Analyzing website {website} for contact {contact_id}")
         website_data = analyze_website(website)
-        if mautic.update_contact(contact_id, website_data):
-            logging.info(f"Successfully updated contact {contact_id}")
+        
+        if website_data:
+            mautic.update_contact(contact_id, website_data)
         else:
-            logging.error(f"Failed to update contact {contact_id}")
+            logging.warning(f"No data found for website {website}")
+            
     except Exception as e:
-        logging.error(f"Error analyzing website for contact {contact_id}: {str(e)}")
-        mautic.mark_analysis_failed(contact_id)
+        logging.error(f"Error processing contact: {str(e)}")
 
 def main():
-    """Main function to run the website analyzer"""
+    logging.basicConfig(
+        format=LOG_FORMAT,
+        level=LOG_LEVEL
+    )
+    
     logging.info("Starting website analysis batch process")
     
     try:
@@ -45,12 +51,8 @@ def main():
         logging.info("Batch process complete")
         
     except Exception as e:
-        logging.error(f"Error in batch process: {str(e)}")
+        logging.error(f"Error in main process: {str(e)}")
         sys.exit(1)
 
 if __name__ == "__main__":
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s'
-    )
     main()

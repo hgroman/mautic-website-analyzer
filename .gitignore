@@ -32,7 +32,6 @@ ENV/
 
 # Environment variables and secrets
 .env
-src/config/settings.py
 
 # Logs
 *.log
