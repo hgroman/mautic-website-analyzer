@@ -31,19 +31,19 @@ class MauticAPI:
         return False
 
     def get_contacts_to_analyze(self):
-        """Get all contacts that need analysis (status is pending or retry)"""
+        """Get all contacts that have a website"""
         headers = {
             'Authorization': f'Bearer {self.access_token}',
             'Content-Type': 'application/json'
         }
         
-        # Search for contacts where analysis is pending or marked for retry
-        search = 'website_analysis_status:pending OR website_analysis_status:retry'
+        # Get all contacts with a non-empty website field
+        search = '!website:""'
         
         response = requests.get(
             f"{self.base_url}/api/contacts",
             headers=headers,
-            params={'search': search, 'limit': 100}  # Process in batches of 100
+            params={'search': search, 'limit': 100}
         )
 
         if response.status_code == 200:
