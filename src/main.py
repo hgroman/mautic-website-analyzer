@@ -56,40 +56,27 @@ def main():
     segment_ops = SegmentOperations(api)
     checkpoint_mgr = CheckpointManager()
     
-    max_retries = 3
     batch_size = 50
-    interval = 600  # 10 minutes in seconds
+    start_time = time.time()
+    segment_alias = "qeued-for-wordpress-scrape"
     
+    # Process contacts in batches
+    start = 0
     while True:
-        try:
-            start_time = time.time()
-            segment_alias = "qeued-for-wordpress-scrape"
+        contacts = segment_ops.get_contacts_batch(segment_alias, start, batch_size)
+        if not contacts:
+            break
             
-            # Process contacts in batches
-            start = 0
-            while True:
-                contacts = segment_ops.get_contacts_batch(segment_alias, start, batch_size)
-                if not contacts:
-                    break
-                    
-                process_contact_batch(contacts, api, checkpoint_mgr)
-                start += batch_size
-            
-            # Calculate remaining time in interval
-            elapsed = time.time() - start_time
-            sleep_time = max(interval - elapsed, 0)
-            
-            stats = checkpoint_mgr.get_stats()
-            logging.info(f"Batch processing completed in {elapsed:.2f}s")
-            logging.info(f"Total contacts processed: {stats['total_processed']}")
-            logging.info(f"Average batch time: {stats['avg_batch_time']:.2f}s")
-            logging.info(f"Sleeping for {sleep_time:.2f}s")
-            
-            time.sleep(sleep_time)
-            
-        except Exception as e:
-            logging.error(f"Main loop error: {e}")
-            time.sleep(interval)  # Full interval on error
+        process_contact_batch(contacts, api, checkpoint_mgr)
+        start += batch_size
+    
+    # Calculate total runtime
+    elapsed = time.time() - start_time
+    
+    stats = checkpoint_mgr.get_stats()
+    logging.info(f"Processing completed in {elapsed:.2f}s")
+    logging.info(f"Total contacts processed: {stats['total_processed']}")
+    logging.info(f"Average batch time: {stats['avg_batch_time']:.2f}s")
 
 if __name__ == "__main__":
     main()

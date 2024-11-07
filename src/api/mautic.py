@@ -5,11 +5,8 @@ import json
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Get the project root directory (2 levels up from this file)
 ROOT_DIR = Path(__file__).parent.parent.parent
 ENV_PATH = ROOT_DIR / '.env'
-
-# Load environment variables from project root
 load_dotenv(ENV_PATH)
 
 class MauticAPI:
@@ -41,29 +38,32 @@ class MauticAPI:
             'Content-Type': 'application/json'
         }
 
-        data = {
-            'fields': {
-                'all': {
-                    'is_wordpress': website_data['is_wordpress'],
-                    'wordpress_version': website_data['wordpress_version'],
-                    'website_pages': website_data['website_pages'],
-                    'website_analysis_date': website_data['website_analysis_date'],
-                    'website_analysis_status': website_data['website_analysis_status']
-                }
-            }
-        }
+        # Prepare the data payload
+        data = website_data.copy()  # Use the data as-is
+        
+        # Ensure wordpress_version is properly formatted
+        if 'wordpress_version' in data and data['wordpress_version']:
+            data['wordpress_version'] = str(data['wordpress_version'])
+        
+        logging.info(f"Website data for contact {contact_id}: {json.dumps(data, indent=2)}")
 
-        logging.info(f"Updating contact {contact_id} with data: {json.dumps(data, indent=2)}")
-
+        url = f"{self.base_url}/api/contacts/{contact_id}/edit"
+        
         response = requests.patch(
-            f"{self.base_url}/api/contacts/{contact_id}/edit",
+            url,
             headers=headers,
             json=data
         )
 
         if response.status_code == 200:
-            logging.info(f"Successfully updated contact {contact_id}")
-            return True
+            response_data = response.json()
+            # Verify the update
+            if 'contact' in response_data:
+                logging.info(f"Successfully updated contact {contact_id}")
+                return True
+            else:
+                logging.error("Update succeeded but contact data not in response")
+                return False
         else:
             logging.error(f"Failed to update contact. Status: {response.status_code}")
             logging.error(f"Response: {response.text}")

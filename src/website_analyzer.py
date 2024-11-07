@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ET
 from urllib.parse import urljoin
 import re
 import logging
+from datetime import datetime
 
 def analyze_website(url):
     """Analyze website for WordPress and sitemap data"""
@@ -12,7 +13,9 @@ def analyze_website(url):
     data = {
         'is_wordpress': False,
         'wordpress_version': None,
-        'website_pages': 0  # Changed from total_pages to website_pages
+        'total_pages': 0,
+        'website_pages': 0,
+        'website_analysis_status': 'pending'
     }
 
     try:
@@ -42,11 +45,15 @@ def analyze_website(url):
                 href = link['href']
                 if href.startswith(url) or (not href.startswith('http') and not href.startswith('#')):
                     internal_links.add(href)
-            
+
+            data['total_pages'] = len(internal_links)
             data['website_pages'] = len(internal_links)
             logging.info(f"Found {len(internal_links)} internal links")
 
+            data['website_analysis_status'] = 'complete'
+
     except Exception as e:
         logging.error(f"Error analyzing website: {str(e)}")
+        data['website_analysis_status'] = 'failed'
 
     return data
