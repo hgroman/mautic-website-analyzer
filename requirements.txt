@@ -2,7 +2,11 @@ beautifulsoup4==4.12.3
 certifi==2024.8.30
 charset-normalizer==3.4.0
 idna==3.10
+mautic==0.2.0
+-e git+ssh://git@github.com/hgroman/mautic-website-analyzer.git@2e6879a99decd99d0cd21c413bdbece2ba1f6c8f#egg=mautic_website_analyzer
+oauthlib==3.2.2
+python-dotenv==1.0.1
 requests==2.32.3
+requests-oauthlib==2.0.0
 soupsieve==2.6
 urllib3==2.2.3
-python-dotenv==1.0.1

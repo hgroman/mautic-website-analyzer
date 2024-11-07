@@ -1,3 +1,5 @@
 #!/bin/bash
-cd "$(dirname "$0")/.."  # Change to the directory of the script and then to the project root
-python -m src.main
+cd "$(dirname "$0")" || exit 1
+source venv/bin/activate
+export PYTHONPATH=$(pwd)  # Ensure Python can find the project directory
+python src/main.py
