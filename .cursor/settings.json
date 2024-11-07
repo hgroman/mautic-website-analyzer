@@ -1,0 +1,9 @@
+{
+    "python.pythonPath": "/Users/henrygroman/development/python-projects/mautic-website-analyzer/venv/bin/python",
+    "python.defaultInterpreterPath": "/Users/henrygroman/development/python-projects/mautic-website-analyzer/venv/bin/python",
+    "python.terminal.activateEnvironment": true,
+    "terminal.integrated.env.osx": {
+        "VIRTUAL_ENV": "/Users/henrygroman/development/python-projects/mautic-website-analyzer/venv",
+        "PATH": "/Users/henrygroman/development/python-projects/mautic-website-analyzer/venv/bin:${env:PATH}"
+    }
+}

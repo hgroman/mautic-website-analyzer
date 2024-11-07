@@ -1,4 +1,3 @@
 #!/bin/bash
-cd /var/www/html/mautic/website-analyzer
-source venv/bin/activate
+cd "$(dirname "$0")/.."  # Change to the directory of the script and then to the project root
 python -m src.main

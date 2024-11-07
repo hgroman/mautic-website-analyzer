@@ -3,7 +3,14 @@ from bs4 import BeautifulSoup
 import xml.etree.ElementTree as ET
 import logging
 from urllib.parse import urljoin
+import json
 import re
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+from src.api.mautic import MauticAPI
+
+
 
 def analyze_website(url):
     """Analyze website for WordPress and sitemap data"""
@@ -84,3 +91,49 @@ def analyze_website(url):
         logging.error(f"Error analyzing {url}: {str(e)}")
 
     return data
+
+def main():
+    mautic = MauticAPI()
+    contact_id = 749
+
+    # Get contact
+    contact_data = mautic.get_contact(contact_id)
+    if not contact_data or 'contact' not in contact_data:
+        logging.error(f"Could not find contact {contact_id}")
+        return
+
+    # Print contact data for inspection
+    print("\nContact Data:")
+    print(json.dumps(contact_data, indent=2))
+
+    # Get website URL - handle the field structure correctly
+    website_field = contact_data['contact'].get('fields', {}).get('core', {}).get('website')
+    if not website_field:
+        logging.error("No website found for contact")
+        return
+
+    # Extract the actual URL from the website field
+    website_url = website_field.get('value') if isinstance(website_field, dict) else website_field
+    if not website_url:
+        logging.error("No website URL found in contact data")
+        return
+
+    print(f"\nAnalyzing website: {website_url}")
+
+    # Analyze website
+    website_data = analyze_website(website_url)
+
+    # Print analysis results
+    print("\nWebsite Analysis Results:")
+    print(f"WordPress: {'Yes' if website_data['is_wordpress'] else 'No'}")
+    print(f"Version: {website_data['wordpress_version'] or 'N/A'}")
+    print(f"Total Pages: {website_data['total_pages']}")
+
+    # Update contact
+    if mautic.update_contact(contact_id, website_data):
+        print("\n✅ Successfully updated contact in Mautic")
+    else:
+        print("\n❌ Failed to update contact in Mautic")
+
+if __name__ == "__main__":
+    main()

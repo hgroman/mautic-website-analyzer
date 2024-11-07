@@ -1,0 +1,14 @@
+{
+    "folders": [
+        {
+            "path": "."
+        }
+    ],
+    "settings": {
+        "python.defaultInterpreterPath": "/Users/henrygroman/development/python-projects/mautic-website-analyzer/venv/bin/python",
+        "python.terminal.activateEnvironment": true,
+        "python.analysis.extraPaths": [
+            "/Users/henrygroman/development/python-projects/mautic-website-analyzer"
+        ]
+    }
+}
